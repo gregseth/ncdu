@@ -86,10 +86,9 @@ static void browse_draw_info(struct dir *dr) {
   ncaddstr(9, 32, "Press i to hide this window");
 }
 
-
 static void browse_draw_item(struct dir *n, int row) {
-  char ct, dt, *size, gr[11], *items;
-  int i, o, x;
+  char ct, dt, *size, gr[wincols], *items;
+  int i, o, x, bwidth;
   float pc;
 
   if(n->flags & FF_BSEL)
@@ -99,9 +98,9 @@ static void browse_draw_item(struct dir *n, int row) {
   if(n == dirlist_parent) {
     mvhline(row, 0, ' ', wincols);
     o = graph == 0 ? 12 :
-        graph == 1 ? 24 :
+        graph == 1 ? wincols/2+2 :
         graph == 2 ? 20 :
-                     31 ;
+                     wincols/2+7 ;
     if (show_items) {
       o += 7;
     }
@@ -133,10 +132,11 @@ static void browse_draw_item(struct dir *n, int row) {
     pc = ((float)(show_as ? n->asize : n->size) / pc) * 100.0f;
     /* graph */
     if(graph == 1 || graph == 3) {
-      o = (int)(10.0f*(float)(show_as ? n->asize : n->size) / (float)(show_as ? dirlist_maxa : dirlist_maxs));
-      for(i=0; i<10; i++)
+      bwidth = wincols / 2 - 12;
+      o = (int)((float)bwidth*(float)(show_as ? n->asize : n->size) / (float)(show_as ? dirlist_maxa : dirlist_maxs));
+      for(i=0; i<bwidth; i++)
         gr[i] = i < o ? '#' : ' ';
-      gr[10] = '\0';
+      gr[bwidth] = '\0';
     }
   }
 
@@ -156,10 +156,10 @@ static void browse_draw_item(struct dir *n, int row) {
 
   /* format and add item to the list */
   switch(graph) {
-    case 0: mvprintw(row, x, " %c%-*s",                       dt, wincols- 2-x, cropstr(n->name, wincols- 2-x)); break;
-    case 1: mvprintw(row, x, "[%10s] %c%-*s",             gr, dt, wincols-14-x, cropstr(n->name, wincols-14-x)); break;
-    case 2: mvprintw(row, x, "[%5.1f%%] %c%-*s",      pc,     dt, wincols-10-x, cropstr(n->name, wincols-10-x)); break;
-    case 3: mvprintw(row, x, "[%5.1f%% %10s] %c%-*s", pc, gr, dt, wincols-21-x, cropstr(n->name, wincols-21-x));
+    case 0: mvprintw(row, x, " %c%-*s",                       dt, wincols- 4-x       , cropstr(n->name, wincols- 4-x       )); break;
+    case 1: mvprintw(row, x, "[%10s] %c%-*s",             gr, dt, wincols- 4-bwidth-x, cropstr(n->name, wincols- 4-bwidth-x)); break;
+    case 2: mvprintw(row, x, "[%5.1f%%] %c%-*s",      pc,     dt, wincols-12-x       , cropstr(n->name, wincols-12-x       )); break;
+    case 3: mvprintw(row, x, "[%5.1f%% %10s] %c%-*s", pc, gr, dt, wincols-11-bwidth-x, cropstr(n->name, wincols-11-bwidth-x));
   }
 
   if(n->flags & FF_BSEL)
@@ -211,7 +211,6 @@ void browse_draw() {
 
   /* get start position */
   t = dirlist_top(0);
-
   /* print the list to the screen */
   for(i=0; t && i<winrows-3; t=dirlist_next(t),i++) {
     browse_draw_item(t, 2+i);
